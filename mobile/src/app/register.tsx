@@ -1,0 +1,84 @@
+import { useState } from 'react'
+import { Link, router } from 'expo-router'
+import { Text, View } from 'react-native'
+import { register } from '@/services/authService'
+import { useAuth } from '@/context/AuthContext'
+import { AuthLayout } from '@/components/AuthLayout'
+import { TextField } from '@/components/TextField'
+import { Button } from '@/components/Button'
+import { IconLock, IconMail, IconUser } from '@/components/icons'
+
+export default function RegisterScreen() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const { setAuth } = useAuth()
+
+  async function handleSubmit() {
+    if (!email || password.length < 6) return
+    setError(null)
+    setLoading(true)
+    try {
+      const { user, token } = await register({ fullName: name, email, password })
+      await setAuth(user, token)
+      router.replace('/tasks')
+    } catch {
+      setError("Impossible de créer le compte. Vérifie les champs.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <AuthLayout title="Créer un compte" subtitle="Commencez à organiser vos tâches en 1 minute.">
+      <View className="gap-4">
+        {error && (
+          <View className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            <Text className="text-red-700 text-sm">{error}</Text>
+          </View>
+        )}
+
+        <TextField
+          label="Nom"
+          icon={<IconUser size={16} color="#94a3b8" />}
+          value={name}
+          onChangeText={setName}
+          autoComplete="name"
+          placeholder="Jean Dupont"
+        />
+
+        <TextField
+          label="Email"
+          icon={<IconMail size={16} color="#94a3b8" />}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          placeholder="vous@exemple.com"
+        />
+
+        <TextField
+          label="Mot de passe"
+          icon={<IconLock size={16} color="#94a3b8" />}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoComplete="new-password"
+          placeholder="6 caractères minimum"
+        />
+
+        <Button title="S'inscrire" onPress={handleSubmit} loading={loading} className="mt-1" />
+
+        <View className="mt-2 flex-row justify-center gap-1">
+          <Text className="text-slate-500 text-sm">Déjà un compte ?</Text>
+          <Link href="/login" className="font-semibold text-indigo-600 text-sm">
+            Se connecter
+          </Link>
+        </View>
+      </View>
+    </AuthLayout>
+  )
+}
