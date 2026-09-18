@@ -65,6 +65,15 @@ taskmanager/
 │   │   └── services/          # client Axios + services auth/task
 │   ├── Dockerfile             # build multi-stage (Node -> Nginx)
 │   └── nginx.conf
+├── mobile/                   # App Expo / React Native (Login, Register, Tasks)
+│   ├── src/
+│   │   ├── app/               # écrans, routing par fichiers (expo-router)
+│   │   ├── components/        # AuthLayout, Button, TextField, StatusBadge, ...
+│   │   ├── context/            # AuthContext (JWT + user, persisté via AsyncStorage)
+│   │   ├── services/           # client Axios + services auth/task
+│   │   └── types/               # types partagés (Task, User, ...)
+│   ├── android/                # projet natif Android (généré, `expo prebuild`)
+│   └── app.json                 # config Expo
 ├── docker-compose.yml         # MySQL + backend + frontend, pour le local
 └── .github/workflows/ci-cd.yml # pipeline CI/CD
 ```
@@ -109,6 +118,31 @@ npm install
 cp .env.example .env   # VITE_API_BASE_URL=http://localhost:8080/api
 npm run dev
 ```
+
+**Mobile** (Expo / React Native)
+
+```bash
+cd mobile
+npm install
+npm run start        # démarre le serveur Metro, puis appuyer sur "a" (Android) ou "i" (iOS)
+# ou directement :
+npm run android       # build + installe sur un émulateur/appareil Android connecté
+npm run ios            # build + installe sur un simulateur iOS (macOS uniquement)
+```
+
+Le fichier `mobile/.env` (`EXPO_PUBLIC_API_BASE_URL`) pointe vers l'API :
+
+- Émulateur Android : `http://10.0.2.2:8080/api` (valeur par défaut si `.env` absent)
+- Simulateur iOS / web : `http://localhost:8080/api`
+- **Appareil physique en USB** : `http://localhost:8080/api` + rediriger les ports vers la machine hôte :
+  ```bash
+  adb reverse tcp:8081 tcp:8081   # bundle Metro
+  adb reverse tcp:8080 tcp:8080   # API backend
+  ```
+  (à refaire à chaque rebranchement du câble)
+- **Appareil physique en Wi-Fi** : remplacer par l'IP locale de la machine, ex. `http://192.168.1.x:8080/api`
+
+> ⚠️ Modifier `mobile/.env` nécessite de redémarrer le serveur Metro (`npm run start`) : les variables `EXPO_PUBLIC_*` ne sont lues qu'au démarrage du process.
 
 ## Variables d'environnement
 
