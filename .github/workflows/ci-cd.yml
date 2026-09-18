@@ -1,8 +1,5 @@
 name: CI/CD
 
-# - PR / push sur une branche : build + test backend et frontend uniquement.
-# - Push sur main : en plus, build des images Docker, push sur Artifact Registry
-#   et déploiement sur Cloud Run (backend puis frontend).
 on:
   push:
     branches: [main]
@@ -51,8 +48,6 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
-      # Pas de suite de tests unitaires sur le frontend a ce jour : le build
-      # TypeScript + Vite (tsc -b && vite build) sert de garde-fou minimal.
       - run: npm run build
 
   build-push-deploy:
@@ -66,9 +61,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Authentification GCP par cle de service account (secret GCP_SA_KEY).
-      # En production, preferer Workload Identity Federation (pas de cle JSON
-      # a stocker) : voir https://github.com/google-github-actions/auth#workload-identity-federation
       - name: Authentification GCP
         uses: google-github-actions/auth@v2
         with:
@@ -86,8 +78,6 @@ jobs:
           docker push "$IMAGE:${{ github.sha }}"
           docker push "$IMAGE:latest"
 
-      # Connexion a Cloud SQL via le socket factory (voir backend/src/main/resources/application-cloud.properties).
-      # Pre-requis GCP : instance Cloud SQL MySQL + secrets Secret Manager db-username / db-password / jwt-secret.
       - name: Deployer le backend sur Cloud Run
         id: deploy-backend
         run: |
@@ -103,7 +93,6 @@ jobs:
 
           echo "url=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} --region ${{ env.GCP_REGION }} --format='value(status.url)')" >> "$GITHUB_OUTPUT"
 
-      # L'URL du backend est injectee au build (Vite embarque les env vars a la compilation).
       - name: Build & push image frontend
         run: |
           IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend"
