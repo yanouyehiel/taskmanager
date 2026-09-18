@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, Text } from 'react-native'
 
 const VARIANT_STYLE = {
   primary: {
-    wrap: 'bg-indigo-600 active:bg-indigo-700 shadow-sm shadow-indigo-600/30',
+    wrap: 'bg-indigo-600 active:bg-indigo-700',
     text: 'text-white',
   },
   secondary: {
@@ -11,6 +11,18 @@ const VARIANT_STYLE = {
     text: 'text-slate-700',
   },
 } as const
+
+// Plain RN styles instead of NativeWind's `shadow-*`/`opacity-*` classes on
+// this Pressable, which are known to break expo-router's navigation context.
+// https://github.com/nativewind/nativewind/issues/1536
+const PRIMARY_SHADOW = {
+  shadowColor: '#4f46e5',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.3,
+  shadowRadius: 2,
+  elevation: 2,
+}
+const DISABLED_STYLE = { opacity: 0.6 }
 
 export function Button({
   title,
@@ -36,9 +48,11 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      className={`flex-row items-center justify-center gap-2 rounded-lg px-4 py-3 ${style.wrap} ${
-        isDisabled ? 'opacity-60' : ''
-      } ${className}`}
+      className={`flex-row items-center justify-center gap-2 rounded-lg px-4 py-3 ${style.wrap} ${className}`}
+      style={[
+        variant === 'primary' ? PRIMARY_SHADOW : undefined,
+        isDisabled ? DISABLED_STYLE : undefined,
+      ]}
     >
       {loading ? (
         <ActivityIndicator

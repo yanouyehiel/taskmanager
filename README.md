@@ -187,12 +187,25 @@ echo -n "cle-jwt-secrete"  | gcloud secrets create jwt-secret --data-file=-
 
 ## Captures d'écran
 
-_À ajouter : lancer l'app (`docker compose up -d --build`), puis déposer des captures des pages Login/Register/Tasks dans `docs/screenshots/` et les référencer ici, par ex. :_
+### Web (frontend React)
 
-```markdown
-![Page de connexion](docs/screenshots/login.png)
-![Liste des tâches](docs/screenshots/tasks.png)
-```
+| Connexion | Inscription |
+|---|---|
+| ![Page de connexion (web)](docs/screenshots/login-web.png) | ![Page d'inscription (web)](docs/screenshots/register-web.png) |
+
+| Liste des tâches | Édition d'une tâche |
+|---|---|
+| ![Liste des tâches (web)](docs/screenshots/tasks-web.png) | ![Édition d'une tâche (web)](docs/screenshots/tasks-web-edit.png) |
+
+### Mobile (Expo / React Native)
+
+| Connexion | Inscription |
+|---|---|
+| <img src="docs/screenshots/login-mobile.jpeg" width="280" alt="Page de connexion (mobile)" /> | <img src="docs/screenshots/register-mobile.jpeg" width="280" alt="Page d'inscription (mobile)" /> |
+
+| Liste des tâches | Filtrage par statut |
+|---|---|
+| <img src="docs/screenshots/tasks-mobile.jpeg" width="280" alt="Liste des tâches (mobile)" /> | <img src="docs/screenshots/tasks-mobile-filter.jpeg" width="280" alt="Filtrage des tâches (mobile)" /> |
 
 ## Déploiement en ligne
 

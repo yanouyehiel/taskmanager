@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   Text,
   TextInput,
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
 import { Redirect } from 'expo-router'
+import { ACTIVE_TAB_SHADOW } from '@/components/activeTabShadow'
 import { useAuth } from '@/context/AuthContext'
 import { createTask, deleteTask, getTasks, updateTask } from '@/services/taskService'
 import type { Task, TaskStatus } from '@/types'
@@ -44,6 +48,7 @@ function initials(name?: string, email?: string) {
 
 export default function TasksScreen() {
   const { user, token, logout } = useAuth()
+  const listRef = useRef<FlatList<Task>>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -111,6 +116,13 @@ export default function TasksScreen() {
     setEditTitle(task.title)
     setEditDescription(task.description ?? '')
     setEditStatus(task.status)
+
+    const index = tasks.findIndex((t) => t.id === task.id)
+    if (index !== -1) {
+      setTimeout(() => {
+        listRef.current?.scrollToIndex({ index, viewPosition: 0.2, animated: true })
+      }, 100)
+    }
   }
 
   function cancelEdit() {
@@ -145,6 +157,7 @@ export default function TasksScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
+      <StatusBar style="dark" />
       <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 py-3.5">
         <View className="flex-row items-center gap-2.5">
           <View className="h-9 w-9 items-center justify-center rounded-xl bg-indigo-600">
@@ -170,11 +183,19 @@ export default function TasksScreen() {
         </View>
       </View>
 
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <FlatList
+        ref={listRef}
         data={tasks}
         keyExtractor={(item) => String(item.id)}
         contentContainerClassName="px-4 pb-10 pt-5"
         keyboardShouldPersistTaps="handled"
+        onScrollToIndexFailed={({ index, averageItemLength }) => {
+          listRef.current?.scrollToOffset({ offset: index * averageItemLength, animated: true })
+        }}
         ListHeaderComponent={
           <View>
             <View className="mb-5 flex-row flex-wrap gap-3">
@@ -233,9 +254,8 @@ export default function TasksScreen() {
                   <Pressable
                     key={f.value}
                     onPress={() => setStatusFilter(f.value)}
-                    className={`rounded-md px-3 py-1.5 ${
-                      statusFilter === f.value ? 'bg-white shadow-sm' : ''
-                    }`}
+                    className={`rounded-md px-3 py-1.5 ${statusFilter === f.value ? 'bg-white' : ''}`}
+                    style={statusFilter === f.value ? ACTIVE_TAB_SHADOW : undefined}
                   >
                     <Text
                       className={`font-medium text-xs ${
@@ -303,9 +323,8 @@ export default function TasksScreen() {
                       <Pressable
                         key={value}
                         onPress={() => setEditStatus(value)}
-                        className={`rounded-md px-2.5 py-1.5 ${
-                          editStatus === value ? 'bg-white shadow-sm' : ''
-                        }`}
+                        className={`rounded-md px-2.5 py-1.5 ${editStatus === value ? 'bg-white' : ''}`}
+                        style={editStatus === value ? ACTIVE_TAB_SHADOW : undefined}
                       >
                         <Text
                           className={`font-medium text-xs ${
@@ -368,6 +387,7 @@ export default function TasksScreen() {
           )
         }
       />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

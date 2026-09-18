@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient'
+import { StatusBar } from 'expo-status-bar'
 import type { ReactNode } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -21,9 +22,10 @@ export function AuthLayout({
 }) {
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
+      <StatusBar style="dark" />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           className="flex-1"
@@ -34,7 +36,8 @@ export function AuthLayout({
             colors={['#4f46e5', '#4f46e5', '#c026d3']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="rounded-b-[32px] px-6 pb-12 pt-6"
+            className="rounded-b-[32px]"
+            style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 48 }}
           >
             <View className="flex-row items-center gap-2.5">
               <View className="h-9 w-9 items-center justify-center rounded-xl bg-white/15">

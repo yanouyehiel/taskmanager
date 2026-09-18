@@ -1,13 +1,17 @@
 import { useState, type ReactNode } from 'react'
-import { Text, TextInput, View, type TextInputProps } from 'react-native'
+import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native'
+import { IconEye, IconEyeOff } from './icons'
 
 export function TextField({
   label,
   icon,
   className = '',
+  secureTextEntry,
   ...props
 }: TextInputProps & { label: string; icon?: ReactNode; className?: string }) {
   const [focused, setFocused] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const isPassword = !!secureTextEntry
 
   return (
     <View className={className}>
@@ -19,6 +23,7 @@ export function TextField({
       >
         {icon && <View className="mr-2.5">{icon}</View>}
         <TextInput
+          key={isPassword ? String(visible) : undefined}
           placeholderTextColor="#94a3b8"
           onFocus={(e) => {
             setFocused(true)
@@ -28,9 +33,19 @@ export function TextField({
             setFocused(false)
             props.onBlur?.(e)
           }}
+          secureTextEntry={isPassword && !visible}
           className="flex-1 py-3 text-slate-900 text-sm"
           {...props}
         />
+        {isPassword && (
+          <Pressable onPress={() => setVisible((v) => !v)} hitSlop={8} className="ml-2.5 py-1">
+            {visible ? (
+              <IconEyeOff size={16} color="#94a3b8" />
+            ) : (
+              <IconEye size={16} color="#94a3b8" />
+            )}
+          </Pressable>
+        )}
       </View>
     </View>
   )
