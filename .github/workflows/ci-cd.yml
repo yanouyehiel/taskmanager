@@ -50,70 +50,70 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  build-push-deploy:
-    name: Build images Docker, push & deploiement Cloud Run
-    needs: [backend-test, frontend-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Authentification GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configurer Docker pour Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
-
-      - name: Build & push image backend
-        run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/backend"
-          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" ./backend
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
-
-      - name: Deployer le backend sur Cloud Run
-        id: deploy-backend
-        run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/backend:${{ github.sha }}"
-          gcloud run deploy ${{ env.BACKEND_SERVICE }} \
-            --image "$IMAGE" \
-            --region ${{ env.GCP_REGION }} \
-            --platform managed \
-            --allow-unauthenticated \
-            --add-cloudsql-instances "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
-            --set-env-vars "SPRING_PROFILES_ACTIVE=cloud,DB_NAME=taskmanager,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
-            --set-secrets "DB_USERNAME=db-username:latest,DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest"
-
-          echo "url=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} --region ${{ env.GCP_REGION }} --format='value(status.url)')" >> "$GITHUB_OUTPUT"
-
-      - name: Build & push image frontend
-        run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend"
-          docker build \
-            --build-arg VITE_API_BASE_URL="${{ steps.deploy-backend.outputs.url }}/api" \
-            -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" \
-            ./frontend
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
-
-      - name: Deployer le frontend sur Cloud Run
-        run: |
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend:${{ github.sha }}"
-          gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
-            --image "$IMAGE" \
-            --region ${{ env.GCP_REGION }} \
-            --platform managed \
-            --allow-unauthenticated \
-            --port 8080
-
-      - name: URLs deployees
-        run: |
-          echo "Backend  : ${{ steps.deploy-backend.outputs.url }}"
-          echo "Frontend : $(gcloud run services describe ${{ env.FRONTEND_SERVICE }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
+  # build-push-deploy:
+  #   name: Build images Docker, push & deploiement Cloud Run
+  #   needs: [backend-test, frontend-build]
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Authentification GCP
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         credentials_json: ${{ secrets.GCP_SA_KEY }}
+  #
+  #     - uses: google-github-actions/setup-gcloud@v2
+  #
+  #     - name: Configurer Docker pour Artifact Registry
+  #       run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+  #
+  #     - name: Build & push image backend
+  #       run: |
+  #         IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/backend"
+  #         docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" ./backend
+  #         docker push "$IMAGE:${{ github.sha }}"
+  #         docker push "$IMAGE:latest"
+  #
+  #     - name: Deployer le backend sur Cloud Run
+  #       id: deploy-backend
+  #       run: |
+  #         IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/backend:${{ github.sha }}"
+  #         gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+  #           --image "$IMAGE" \
+  #           --region ${{ env.GCP_REGION }} \
+  #           --platform managed \
+  #           --allow-unauthenticated \
+  #           --add-cloudsql-instances "${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
+  #           --set-env-vars "SPRING_PROFILES_ACTIVE=cloud,DB_NAME=taskmanager,CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
+  #           --set-secrets "DB_USERNAME=db-username:latest,DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest"
+  #
+  #         echo "url=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} --region ${{ env.GCP_REGION }} --format='value(status.url)')" >> "$GITHUB_OUTPUT"
+  #
+  #     - name: Build & push image frontend
+  #       run: |
+  #         IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend"
+  #         docker build \
+  #           --build-arg VITE_API_BASE_URL="${{ steps.deploy-backend.outputs.url }}/api" \
+  #           -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" \
+  #           ./frontend
+  #         docker push "$IMAGE:${{ github.sha }}"
+  #         docker push "$IMAGE:latest"
+  #
+  #     - name: Deployer le frontend sur Cloud Run
+  #       run: |
+  #         IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/frontend:${{ github.sha }}"
+  #         gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
+  #           --image "$IMAGE" \
+  #           --region ${{ env.GCP_REGION }} \
+  #           --platform managed \
+  #           --allow-unauthenticated \
+  #           --port 8080
+  #
+  #     - name: URLs deployees
+  #       run: |
+  #         echo "Backend  : ${{ steps.deploy-backend.outputs.url }}"
+  #         echo "Frontend : $(gcloud run services describe ${{ env.FRONTEND_SERVICE }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
